@@ -1,0 +1,10 @@
+----------------
+| ARCHITECTURE |
+---------------
+Transaction Data → Flask API → ML Pipeline
+                                   ├── Preprocessing (pandas/numpy)
+                                   ├── Anomaly Detection Model (scikit-learn)
+                                   └── MongoDB (transaction storage & history)
+                                        │
+                                        ▼
+                              Dashboard (spending trends, alerts, insights)
