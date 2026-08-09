@@ -1,5 +1,5 @@
-ARCHITECTURE
-------------
+PROJECT STRUCTURE
+-----------------
 personal-finance-anomaly-detector/
 ├── app/
 │   ├── __init__.py
