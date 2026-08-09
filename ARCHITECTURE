@@ -1,0 +1,15 @@
+ARCHITECTURE
+------------
+personal-finance-anomaly-detector/
+├── app/
+│   ├── __init__.py
+│   ├── routes/               # Flask API endpoints
+│   ├── models/                # ML models (training & inference)
+│   ├── services/              # Data processing & anomaly detection logic
+│   └── database/              # MongoDB connection & schemas
+├── dashboard/                 # Dashboard/frontend files
+├── notebooks/                 # ML experimentation & model training
+├── data/                       # Sample/raw transaction data (gitignored)
+├── requirements.txt
+├── .env.example
+└── README.md
