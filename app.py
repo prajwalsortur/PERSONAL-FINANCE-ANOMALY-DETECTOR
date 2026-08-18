@@ -474,7 +474,166 @@ st.plotly_chart(
     fig_classification,
     use_container_width=True
 )
+# --------------------------------------------------
+# ML MODEL EVALUATION
+# --------------------------------------------------
 
+st.subheader("🤖 ML Model Evaluation")
+
+
+# --------------------------------------------------
+# MODEL METRICS
+# --------------------------------------------------
+
+normal_transactions = (
+    filtered_df["is_anomaly"] == 0
+).sum()
+
+anomalous_transactions = (
+    filtered_df["is_anomaly"] == 1
+).sum()
+
+
+if len(filtered_df) > 0:
+
+    filtered_anomaly_rate = (
+        anomalous_transactions /
+        len(filtered_df)
+    ) * 100
+
+else:
+
+    filtered_anomaly_rate = 0
+
+
+normal_scores = filtered_df[
+    filtered_df["is_anomaly"] == 0
+]["anomaly_score"]
+
+
+anomaly_scores = filtered_df[
+    filtered_df["is_anomaly"] == 1
+]["anomaly_score"]
+
+
+if len(normal_scores) > 0:
+
+    normal_mean_score = normal_scores.mean()
+
+else:
+
+    normal_mean_score = 0
+
+
+if len(anomaly_scores) > 0:
+
+    anomaly_mean_score = anomaly_scores.mean()
+
+else:
+
+    anomaly_mean_score = 0
+
+
+# --------------------------------------------------
+# METRIC CARDS
+# --------------------------------------------------
+
+col1, col2, col3, col4 = st.columns(4)
+
+
+with col1:
+
+    st.metric(
+        "Normal Transactions",
+        f"{normal_transactions:,}"
+    )
+
+
+with col2:
+
+    st.metric(
+        "Anomalous Transactions",
+        f"{anomalous_transactions:,}"
+    )
+
+
+with col3:
+
+    st.metric(
+        "Anomaly Rate",
+        f"{filtered_anomaly_rate:.2f}%"
+    )
+
+
+with col4:
+
+    st.metric(
+        "Anomaly Score Gap",
+        f"{normal_mean_score - anomaly_mean_score:.4f}"
+    )
+
+
+# --------------------------------------------------
+# ANOMALY SCORE DISTRIBUTION
+# --------------------------------------------------
+
+score_df = pd.DataFrame(
+    {
+        "Anomaly Score": pd.concat(
+            [
+                normal_scores,
+                anomaly_scores
+            ],
+            ignore_index=True
+        ),
+        "Transaction Type": (
+            ["Normal"] * len(normal_scores)
+            +
+            ["Anomaly"] * len(anomaly_scores)
+        )
+    }
+)
+
+
+if not score_df.empty:
+
+    fig_score = px.histogram(
+        score_df,
+        x="Anomaly Score",
+        color="Transaction Type",
+        nbins=40,
+        title="Isolation Forest Anomaly Score Distribution",
+        labels={
+            "Anomaly Score": "Anomaly Score",
+            "count": "Number of Transactions"
+        }
+    )
+
+    fig_score.add_vline(
+        x=0,
+        line_dash="dash",
+        annotation_text="Anomaly Boundary"
+    )
+
+    st.plotly_chart(
+        fig_score,
+        use_container_width=True
+    )
+
+
+# --------------------------------------------------
+# MODEL INTERPRETATION
+# --------------------------------------------------
+
+st.info(
+    "Isolation Forest identifies unusual transactions "
+    "by assigning lower anomaly scores to observations "
+    "that are easier to isolate from the normal transaction "
+    "patterns."
+)
+
+
+st.divider()
 
 # --------------------------------------------------
 # DETECTED ANOMALIES
