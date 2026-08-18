@@ -620,7 +620,106 @@ if not score_df.empty:
         use_container_width=True
     )
 
+# --------------------------------------------------
+# FEATURE BEHAVIOR ANALYSIS
+# --------------------------------------------------
 
+st.subheader("📊 Anomalous Transaction Behavior")
+
+
+# --------------------------------------------------
+# WEEKEND BEHAVIOR
+# --------------------------------------------------
+
+weekend_comparison = (
+    filtered_df
+    .groupby("is_anomaly")["is_weekend"]
+    .mean()
+    .reset_index()
+)
+
+
+weekend_comparison["Transaction Type"] = (
+    weekend_comparison["is_anomaly"]
+    .map({
+        0: "Normal",
+        1: "Anomaly"
+    })
+)
+
+
+weekend_comparison["Weekend Percentage"] = (
+    weekend_comparison["is_weekend"] * 100
+)
+
+
+fig_weekend = px.bar(
+    weekend_comparison,
+    x="Transaction Type",
+    y="Weekend Percentage",
+    title="Weekend Transaction Comparison",
+    labels={
+        "Weekend Percentage": "Weekend Transactions (%)",
+        "Transaction Type": "Transaction Type"
+    },
+    text="Weekend Percentage"
+)
+
+
+fig_weekend.update_traces(
+    texttemplate="%{text:.1f}%",
+    textposition="outside"
+)
+
+
+st.plotly_chart(
+    fig_weekend,
+    use_container_width=True
+)
+# --------------------------------------------------
+# TRANSACTION AMOUNT BEHAVIOR
+# --------------------------------------------------
+
+amount_comparison = (
+    filtered_df
+    .groupby("is_anomaly")["amount"]
+    .mean()
+    .reset_index()
+)
+
+
+amount_comparison["Transaction Type"] = (
+    amount_comparison["is_anomaly"]
+    .map({
+        0: "Normal",
+        1: "Anomaly"
+    })
+)
+
+
+fig_amount = px.bar(
+    amount_comparison,
+    x="Transaction Type",
+    y="amount",
+    title="Average Transaction Amount",
+    labels={
+        "amount": "Average Amount (₹)",
+        "Transaction Type": "Transaction Type"
+    },
+    text="amount"
+)
+
+
+fig_amount.update_traces(
+    texttemplate="₹%{text:,.2f}",
+    textposition="outside"
+)
+
+
+st.plotly_chart(
+    fig_amount,
+    use_container_width=True
+)
 # --------------------------------------------------
 # MODEL INTERPRETATION
 # --------------------------------------------------
