@@ -1,0 +1,596 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from src.financial_insights import generate_insights
+
+# --------------------------------------------------
+# PAGE CONFIGURATION
+# --------------------------------------------------
+
+st.set_page_config(
+    page_title="Personal Finance Anomaly Detector",
+    page_icon="💰",
+    layout="wide"
+)
+
+
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
+
+DATA_PATH = "outputs/anomaly_results.csv"
+ANALYSIS_PATH = "outputs/anomaly_analysis.csv"
+
+df = pd.read_csv(DATA_PATH)
+analysis_df = pd.read_csv(ANALYSIS_PATH)
+
+df["date"] = pd.to_datetime(df["date"])
+analysis_df["date"] = pd.to_datetime(analysis_df["date"])
+
+
+# --------------------------------------------------
+# TITLE
+# --------------------------------------------------
+
+st.title("💰 Personal Finance Anomaly Detector")
+
+st.markdown(
+    "AI-powered financial transaction analysis and anomaly detection"
+)
+
+
+# --------------------------------------------------
+# SIDEBAR FILTERS
+# --------------------------------------------------
+
+st.sidebar.header("🔎 Filters")
+
+
+min_date = df["date"].min().date()
+max_date = df["date"].max().date()
+
+date_range = st.sidebar.date_input(
+    "Date Range",
+    value=(min_date, max_date),
+    min_value=min_date,
+    max_value=max_date
+)
+
+
+categories = sorted(df["category"].unique())
+
+selected_categories = st.sidebar.multiselect(
+    "Category",
+    categories,
+    default=categories
+)
+
+
+payment_methods = sorted(df["payment_method"].unique())
+
+selected_payment_methods = st.sidebar.multiselect(
+    "Payment Method",
+    payment_methods,
+    default=payment_methods
+)
+
+
+transaction_type = st.sidebar.radio(
+    "Transaction Type",
+    [
+        "All Transactions",
+        "Normal Transactions",
+        "Anomalies Only"
+    ]
+)
+
+
+# --------------------------------------------------
+# APPLY FILTERS
+# --------------------------------------------------
+
+filtered_df = df.copy()
+
+
+if len(date_range) == 2:
+
+    start_date = pd.Timestamp(date_range[0])
+    end_date = pd.Timestamp(date_range[1]) + pd.Timedelta(days=1)
+
+    filtered_df = filtered_df[
+        (filtered_df["date"] >= start_date)
+        & (filtered_df["date"] < end_date)
+    ]
+
+
+filtered_df = filtered_df[
+    filtered_df["category"].isin(
+        selected_categories
+    )
+]
+
+
+filtered_df = filtered_df[
+    filtered_df["payment_method"].isin(
+        selected_payment_methods
+    )
+]
+
+
+if transaction_type == "Normal Transactions":
+
+    filtered_df = filtered_df[
+        filtered_df["is_anomaly"] == 0
+    ]
+
+elif transaction_type == "Anomalies Only":
+
+    filtered_df = filtered_df[
+        filtered_df["is_anomaly"] == 1
+    ]
+
+
+# --------------------------------------------------
+# MERGE ANALYSIS DATA
+# --------------------------------------------------
+
+filtered_analysis = analysis_df[
+    [
+        "transaction_id",
+        "amount_difference",
+        "amount_difference_percent",
+        "reason",
+        "severity"
+    ]
+]
+
+
+filtered_df = filtered_df.merge(
+    filtered_analysis,
+    on="transaction_id",
+    how="left"
+)
+
+
+# --------------------------------------------------
+# KPI CALCULATIONS
+# --------------------------------------------------
+
+total_transactions = len(filtered_df)
+
+total_spending = filtered_df["amount"].sum()
+
+anomalies = (
+    filtered_df["is_anomaly"] == 1
+).sum()
+
+high_risk = (
+    filtered_df["severity"] == "High"
+).sum()
+
+
+if total_transactions > 0:
+
+    anomaly_percentage = (
+        anomalies / total_transactions
+    ) * 100
+
+else:
+
+    anomaly_percentage = 0
+
+
+# --------------------------------------------------
+# KPI CARDS
+# --------------------------------------------------
+
+col1, col2, col3, col4 = st.columns(4)
+
+
+with col1:
+
+    st.metric(
+        "Total Transactions",
+        f"{total_transactions:,}"
+    )
+
+
+with col2:
+
+    st.metric(
+        "Total Spending",
+        f"₹{total_spending:,.2f}"
+    )
+
+
+with col3:
+
+    st.metric(
+        "Anomalies Detected",
+        f"{anomalies:,}"
+    )
+
+
+with col4:
+
+    st.metric(
+        "High Risk",
+        f"{high_risk:,}"
+    )
+
+
+st.divider()
+
+# --------------------------------------------------
+# FINANCIAL INSIGHTS
+# --------------------------------------------------
+
+st.subheader("💡 Financial Insights")
+
+
+insight_analysis_df = filtered_df[
+    filtered_df["is_anomaly"] == 1
+].copy()
+
+
+insights = generate_insights(
+    filtered_df,
+    insight_analysis_df
+)
+
+
+for insight in insights:
+
+    st.info(insight)
+
+
+st.divider()
+# --------------------------------------------------
+# SPENDING OVER TIME
+# --------------------------------------------------
+
+st.subheader("📈 Spending Over Time")
+
+
+daily_spending = (
+    filtered_df
+    .groupby(
+        filtered_df["date"].dt.date
+    )["amount"]
+    .sum()
+    .reset_index()
+)
+
+
+daily_spending.columns = [
+    "date",
+    "amount"
+]
+
+
+fig_time = px.line(
+    daily_spending,
+    x="date",
+    y="amount",
+    title="Daily Spending Trend",
+    labels={
+        "date": "Date",
+        "amount": "Amount (₹)"
+    }
+)
+
+
+st.plotly_chart(
+    fig_time,
+    use_container_width=True
+)
+
+
+# --------------------------------------------------
+# CATEGORY ANALYSIS
+# --------------------------------------------------
+
+col1, col2 = st.columns(2)
+
+
+with col1:
+
+    st.subheader("📊 Spending by Category")
+
+    category_spending = (
+        filtered_df
+        .groupby("category")["amount"]
+        .sum()
+        .reset_index()
+        .sort_values(
+            "amount",
+            ascending=False
+        )
+    )
+
+    fig_category = px.bar(
+        category_spending,
+        x="category",
+        y="amount",
+        title="Total Spending by Category",
+        labels={
+            "category": "Category",
+            "amount": "Amount (₹)"
+        }
+    )
+
+    st.plotly_chart(
+        fig_category,
+        use_container_width=True
+    )
+
+
+with col2:
+
+    st.subheader("🚨 Anomalies by Category")
+
+    category_anomalies = (
+        filtered_df[
+            filtered_df["is_anomaly"] == 1
+        ]
+        .groupby("category")
+        .size()
+        .reset_index(
+            name="anomalies"
+        )
+        .sort_values(
+            "anomalies",
+            ascending=False
+        )
+    )
+
+    fig_anomaly_category = px.bar(
+        category_anomalies,
+        x="category",
+        y="anomalies",
+        title="Detected Anomalies by Category",
+        labels={
+            "category": "Category",
+            "anomalies": "Number of Anomalies"
+        }
+    )
+
+    st.plotly_chart(
+        fig_anomaly_category,
+        use_container_width=True
+    )
+
+
+# --------------------------------------------------
+# SEVERITY ANALYSIS
+# --------------------------------------------------
+
+st.subheader("⚠️ Anomaly Severity")
+
+
+severity_df = (
+    filtered_df[
+        filtered_df["is_anomaly"] == 1
+    ]["severity"]
+    .value_counts()
+    .reset_index()
+)
+
+
+severity_df.columns = [
+    "severity",
+    "count"
+]
+
+
+fig_severity = px.bar(
+    severity_df,
+    x="severity",
+    y="count",
+    title="Anomalies by Severity",
+    labels={
+        "severity": "Severity",
+        "count": "Number of Anomalies"
+    }
+)
+
+
+st.plotly_chart(
+    fig_severity,
+    use_container_width=True
+)
+
+
+# --------------------------------------------------
+# PAYMENT METHOD ANALYSIS
+# --------------------------------------------------
+
+st.subheader("💳 Payment Method Analysis")
+
+
+payment_analysis = (
+    filtered_df
+    .groupby("payment_method")
+    .agg(
+        transactions=("transaction_id", "count"),
+        spending=("amount", "sum"),
+        anomalies=("is_anomaly", "sum")
+    )
+    .reset_index()
+)
+
+
+fig_payment = px.bar(
+    payment_analysis,
+    x="payment_method",
+    y="anomalies",
+    title="Anomalies by Payment Method",
+    labels={
+        "payment_method": "Payment Method",
+        "anomalies": "Anomalies"
+    }
+)
+
+
+st.plotly_chart(
+    fig_payment,
+    use_container_width=True
+)
+
+
+# --------------------------------------------------
+# NORMAL VS ANOMALOUS
+# --------------------------------------------------
+
+st.subheader("🚨 Transaction Classification")
+
+
+classification = (
+    filtered_df["is_anomaly"]
+    .map({
+        0: "Normal",
+        1: "Anomaly"
+    })
+    .value_counts()
+    .reset_index()
+)
+
+
+classification.columns = [
+    "Type",
+    "Count"
+]
+
+
+fig_classification = px.pie(
+    classification,
+    names="Type",
+    values="Count",
+    title="Normal vs Anomalous Transactions"
+)
+
+
+st.plotly_chart(
+    fig_classification,
+    use_container_width=True
+)
+
+
+# --------------------------------------------------
+# DETECTED ANOMALIES
+# --------------------------------------------------
+
+st.subheader("🔴 Detected Anomalies")
+
+
+filtered_anomalies = filtered_df[
+    filtered_df["is_anomaly"] == 1
+].copy()
+
+
+display_columns = [
+    "transaction_id",
+    "date",
+    "category",
+    "merchant",
+    "amount",
+    "payment_method",
+    "anomaly_score",
+    "severity",
+    "amount_difference_percent",
+    "reason"
+]
+
+
+if len(filtered_anomalies) > 0:
+
+    filtered_anomalies = (
+        filtered_anomalies
+        .sort_values(
+            "anomaly_score",
+            ascending=True
+        )
+    )
+
+    st.dataframe(
+        filtered_anomalies[
+            display_columns
+        ],
+        use_container_width=True,
+        hide_index=True
+    )
+
+else:
+
+    st.info(
+        "No anomalies found for the selected filters."
+    )
+
+
+# --------------------------------------------------
+# MOST SUSPICIOUS TRANSACTIONS
+# --------------------------------------------------
+
+st.subheader("🚨 Most Suspicious Transactions")
+
+
+top_anomalies = filtered_anomalies.head(5)
+
+
+for _, row in top_anomalies.iterrows():
+
+    with st.expander(
+        f"Transaction {int(row['transaction_id'])} — "
+        f"₹{row['amount']:,.2f} — "
+        f"{row['severity']}"
+    ):
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.write(
+                f"**Category:** {row['category']}"
+            )
+
+            st.write(
+                f"**Merchant:** {row['merchant']}"
+            )
+
+            st.write(
+                f"**Payment Method:** "
+                f"{row['payment_method']}"
+            )
+
+        with col2:
+
+            st.write(
+                f"**Anomaly Score:** "
+                f"{row['anomaly_score']:.6f}"
+            )
+
+            st.write(
+                f"**Severity:** "
+                f"{row['severity']}"
+            )
+
+            st.write(
+                f"**Amount Difference:** "
+                f"{row['amount_difference_percent']:.2f}%"
+            )
+
+        st.write(
+            f"**Reason:** {row['reason']}"
+        )
+
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+
+st.divider()
+
+st.caption(
+    "Personal Finance Anomaly Detector | "
+    "Machine Learning powered by Isolation Forest"
+)
