@@ -23,11 +23,4 @@ The system:
 
 ---
 
-## 🎯 Problem Statement
-
-Large numbers of financial transactions can make it difficult to identify unusual spending patterns manually.
-
-This project uses Machine Learning to automatically detect transactions that differ significantly from normal financial behavior and uses AI to provide understandable explanations and financial insights.
-
----
 
