@@ -140,7 +140,8 @@ filtered_analysis = analysis_df[
         "amount_difference",
         "amount_difference_percent",
         "reason",
-        "severity"
+        "severity",
+        "risk_score"
     ]
 ]
 
@@ -167,7 +168,11 @@ anomalies = (
 high_risk = (
     filtered_df["severity"] == "High"
 ).sum()
-
+average_risk_score = (
+    filtered_df["risk_score"].mean()
+    if len(filtered_df) > 0
+    else 0
+)
 
 if total_transactions > 0:
 
@@ -184,7 +189,7 @@ else:
 # KPI CARDS
 # --------------------------------------------------
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 
 with col1:
@@ -218,6 +223,12 @@ with col4:
         f"{high_risk:,}"
     )
 
+with col5:
+
+    st.metric(
+        "Avg Risk Score",
+        f"{average_risk_score:.1f}/100"
+    )
 
 st.divider()
 
@@ -754,21 +765,21 @@ display_columns = [
     "amount",
     "payment_method",
     "anomaly_score",
+    "risk_score",
     "severity",
     "amount_difference_percent",
     "reason"
 ]
 
-
 if len(filtered_anomalies) > 0:
 
     filtered_anomalies = (
-        filtered_anomalies
-        .sort_values(
-            "anomaly_score",
-            ascending=True
-        )
+    filtered_anomalies
+    .sort_values(
+        "risk_score",
+        ascending=False
     )
+)
 
     st.dataframe(
         filtered_anomalies[
@@ -799,8 +810,9 @@ for _, row in top_anomalies.iterrows():
 
     with st.expander(
         f"Transaction {int(row['transaction_id'])} — "
-        f"₹{row['amount']:,.2f} — "
-        f"{row['severity']}"
+f"₹{row['amount']:,.2f} — "
+f"Risk {row['risk_score']:.0f}/100 — "
+f"{row['severity']}"
     ):
 
         col1, col2 = st.columns(2)
@@ -828,19 +840,19 @@ for _, row in top_anomalies.iterrows():
             )
 
             st.write(
+                f"**Risk Score:** "
+                f"{row['risk_score']:.0f}/100"
+            )
+
+            st.write(
                 f"**Severity:** "
                 f"{row['severity']}"
             )
 
             st.write(
                 f"**Amount Difference:** "
-                f"{row['amount_difference_percent']:.2f}%"
-            )
-
-        st.write(
-            f"**Reason:** {row['reason']}"
-        )
-
+            f"{row['amount_difference_percent']:.2f}%"
+    )
 
 # --------------------------------------------------
 # FOOTER

@@ -33,6 +33,79 @@ def analyze_anomalies():
     high_amount_threshold = df["amount"].quantile(0.95)
 
     # --------------------------------------------------
+    # RISK SCORE
+    # --------------------------------------------------
+
+    def calculate_risk_score(row):
+
+        score = 0
+
+        # ----------------------------------------------
+        # ISOLATION FOREST SCORE
+        # ----------------------------------------------
+
+        anomaly_score = row["anomaly_score"]
+
+        # More negative = more suspicious
+        if anomaly_score <= -0.05:
+            score += 50
+
+        elif anomaly_score <= -0.03:
+            score += 40
+
+        elif anomaly_score <= -0.01:
+            score += 30
+
+        else:
+            score += 20
+
+        # ----------------------------------------------
+        # CATEGORY AMOUNT DIFFERENCE
+        # ----------------------------------------------
+
+        amount_ratio = row["amount_vs_category_avg"]
+
+        if amount_ratio >= 5:
+            score += 35
+
+        elif amount_ratio >= 3:
+            score += 30
+
+        elif amount_ratio >= 2:
+            score += 20
+
+        elif amount_ratio >= 1.5:
+            score += 10
+
+        elif amount_ratio <= 0.1:
+            score += 25
+
+        elif amount_ratio <= 0.5:
+            score += 15
+
+        # ----------------------------------------------
+        # EXTREMELY HIGH TRANSACTION
+        # ----------------------------------------------
+
+        if row["amount"] >= high_amount_threshold:
+            score += 10
+
+        # ----------------------------------------------
+        # WEEKEND
+        # ----------------------------------------------
+
+        if row["is_weekend"] == 1:
+            score += 5
+
+        # Maximum score = 100
+        return min(score, 100)
+
+    anomalies["risk_score"] = anomalies.apply(
+        calculate_risk_score,
+        axis=1
+    )
+
+    # --------------------------------------------------
     # GENERATE REASONS
     # --------------------------------------------------
 
@@ -40,39 +113,86 @@ def analyze_anomalies():
 
         reasons = []
 
-        # Amount significantly higher than category average
-        if row["amount_vs_category_avg"] >= 2:
-            reasons.append(
-                "Amount is significantly higher than the category average"
+        amount = row["amount"]
+        category_average = row["category_avg_amount"]
+        amount_ratio = row["amount_vs_category_avg"]
+
+        # ----------------------------------------------
+        # HIGHER THAN CATEGORY AVERAGE
+        # ----------------------------------------------
+
+        if amount_ratio >= 2:
+
+            percentage = (
+                (amount_ratio - 1) * 100
             )
 
-        elif row["amount_vs_category_avg"] >= 1.5:
             reasons.append(
-                "Amount is higher than the category average"
+                f"Amount is {percentage:.1f}% above the "
+                f"category average "
+                f"(₹{amount:,.2f} vs "
+                f"₹{category_average:,.2f})"
             )
 
-        # Amount significantly lower than category average
-        elif row["amount_vs_category_avg"] <= 0.5:
-            reasons.append(
-                "Amount is significantly lower than the category average"
+        elif amount_ratio >= 1.5:
+
+            percentage = (
+                (amount_ratio - 1) * 100
             )
 
-        # Extremely high transaction
-        if row["amount"] >= high_amount_threshold:
+            reasons.append(
+                f"Amount is {percentage:.1f}% above the "
+                f"category average "
+                f"(₹{amount:,.2f} vs "
+                f"₹{category_average:,.2f})"
+            )
+
+        # ----------------------------------------------
+        # LOWER THAN CATEGORY AVERAGE
+        # ----------------------------------------------
+
+        elif amount_ratio <= 0.5:
+
+            percentage = (
+                (1 - amount_ratio) * 100
+            )
+
+            reasons.append(
+                f"Amount is {percentage:.1f}% below the "
+                f"category average "
+                f"(₹{amount:,.2f} vs "
+                f"₹{category_average:,.2f})"
+            )
+
+        # ----------------------------------------------
+        # EXTREMELY HIGH TRANSACTION
+        # ----------------------------------------------
+
+        if amount >= high_amount_threshold:
+
             reasons.append(
                 "Transaction amount is unusually high"
             )
 
-        # Weekend transaction
+        # ----------------------------------------------
+        # WEEKEND
+        # ----------------------------------------------
+
         if row["is_weekend"] == 1:
+
             reasons.append(
                 "Transaction occurred on a weekend"
             )
 
-        # Fallback explanation
+        # ----------------------------------------------
+        # FALLBACK
+        # ----------------------------------------------
+
         if not reasons:
+
             reasons.append(
-                "Transaction pattern differs from normal transactions"
+                "Transaction pattern differs from "
+                "normal transactions"
             )
 
         return "; ".join(reasons)
@@ -88,18 +208,14 @@ def analyze_anomalies():
 
     def calculate_severity(row):
 
-        score = row["anomaly_score"]
-        amount_ratio = row["amount_vs_category_avg"]
+        risk_score = row["risk_score"]
 
-        # Very suspicious
-        if score < -0.05 or amount_ratio >= 3:
+        if risk_score >= 80:
             return "High"
 
-        # Moderately suspicious
-        elif score < 0 or amount_ratio >= 2:
+        elif risk_score >= 50:
             return "Medium"
 
-        # Less suspicious
         else:
             return "Low"
 
@@ -109,12 +225,12 @@ def analyze_anomalies():
     )
 
     # --------------------------------------------------
-    # SORT BY SUSPICIOUSNESS
+    # SORT BY RISK
     # --------------------------------------------------
 
     anomalies = anomalies.sort_values(
-        by="anomaly_score",
-        ascending=True
+        by="risk_score",
+        ascending=False
     )
 
     # --------------------------------------------------
@@ -131,6 +247,7 @@ def analyze_anomalies():
     # --------------------------------------------------
 
     print("Anomaly analysis completed successfully.")
+
     print(
         f"Total anomalies analyzed: {len(anomalies)}"
     )
@@ -146,6 +263,13 @@ def analyze_anomalies():
         .value_counts()
     )
 
+    print("\nRisk score statistics:")
+
+    print(
+        anomalies["risk_score"]
+        .describe()
+    )
+
     print("\nTop 10 suspicious transactions:")
 
     print(
@@ -156,6 +280,7 @@ def analyze_anomalies():
                 "merchant",
                 "amount",
                 "anomaly_score",
+                "risk_score",
                 "severity",
                 "reason"
             ]
@@ -166,4 +291,5 @@ def analyze_anomalies():
 
 
 if __name__ == "__main__":
+
     analyze_anomalies()
