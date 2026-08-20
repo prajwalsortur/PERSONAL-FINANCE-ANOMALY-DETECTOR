@@ -1,61 +1,79 @@
-# 💳 Personal Finance Anomaly Detector
+# 💰 Personal Finance Anomaly Detector
 
-An AI/ML-based personal finance analytics project that detects unusual financial transactions using **Python, Pandas, Scikit-learn, and Isolation Forest**.
-
-The project currently focuses on building the complete data pipeline, generating realistic transaction data, performing feature engineering, and detecting potentially anomalous transactions.
+An AI-powered personal finance analytics application that detects unusual financial transactions, assigns risk scores, generates financial insights, and provides an AI financial assistant using **Google Gemini**.
 
 ---
 
 ## 🚀 Project Overview
 
-Managing personal expenses manually can make it difficult to identify unusual or suspicious transactions.
+Personal Finance Anomaly Detector analyzes financial transactions using Machine Learning and AI.
 
-The **Personal Finance Anomaly Detector** analyzes transaction data and identifies transactions that differ significantly from normal spending patterns.
+The system:
 
-The current system:
-
-- Generates a synthetic financial transaction dataset
-- Preprocesses transaction data
-- Performs feature engineering
-- Encodes categorical information
-- Trains an Isolation Forest anomaly detection model
+- Analyzes financial transactions
+- Detects unusual transactions using Isolation Forest
 - Calculates anomaly scores
-- Identifies potentially unusual transactions
-- Saves the trained ML model
-- Exports anomaly detection results for further analysis
+- Assigns risk scores from 0–100
+- Classifies anomalies as Low, Medium, or High risk
+- Explains why a transaction was flagged
+- Generates financial insights
+- Visualizes spending patterns
+- Provides an AI Financial Assistant powered by Google Gemini
+- Provides an interactive Streamlit dashboard
 
 ---
 
-## 🏗️ Current Project Architecture
+## 🎯 Problem Statement
+
+Large numbers of financial transactions can make it difficult to identify unusual spending patterns manually.
+
+This project uses Machine Learning to automatically detect transactions that differ significantly from normal financial behavior and uses AI to provide understandable explanations and financial insights.
+
+---
+
+## 🏗️ System Architecture
 
 ```text
-Transaction Data
-       │
-       ▼
-generate_data.py
-       │
-       ▼
-transactions.csv
-       │
-       ▼
-preprocess.py
-       │
-       ▼
-processed_transactions.csv
-       │
-       ▼
-Feature Engineering
-       │
-       ▼
-train_model.py
-       │
-       ▼
-Isolation Forest
-       │
-       ├──────────────► isolation_forest.pkl
-       │
-       ▼
-Anomaly Detection
-       │
-       ▼
-anomaly_results.csv
+                 ┌──────────────────────┐
+                 │   Transaction Data   │
+                 │      CSV Dataset     │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │   Data Preprocessing │
+                 │   Pandas / NumPy     │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │   Feature Engineering│
+                 │ Amount / Date / etc. │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │   Isolation Forest   │
+                 │   Anomaly Detection  │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │   Risk Analysis      │
+                 │ Score + Severity     │
+                 └──────────┬───────────┘
+                            │
+                ┌───────────┴────────────┐
+                ▼                        ▼
+       ┌─────────────────┐      ┌─────────────────┐
+       │ Financial       │      │ Gemini AI        │
+       │ Insights        │      │ Assistant        │
+       └────────┬────────┘      └────────┬────────┘
+                │                        │
+                └───────────┬────────────┘
+                            ▼
+                 ┌──────────────────────┐
+                 │ Streamlit Dashboard  │
+                 │ Charts + Insights +  │
+                 │ AI Assistant          │
+                 └──────────────────────┘
