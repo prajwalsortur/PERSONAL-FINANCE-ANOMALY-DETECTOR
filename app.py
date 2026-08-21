@@ -922,6 +922,8 @@ f"{row['severity']}"
 # AI FINANCIAL ASSISTANT
 # --------------------------------------------------
 
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 st.divider()
 
 st.subheader("🤖 AI Financial Assistant")
@@ -937,7 +939,7 @@ question = st.text_input(
 )
 
 if st.button("Ask Gemini"):
-
+    
     if not question.strip():
 
         st.warning(
@@ -946,7 +948,9 @@ if st.button("Ask Gemini"):
 
     else:
 
-        with st.spinner("Gemini is analyzing your financial data..."):
+        with st.spinner(
+            "Gemini is analyzing your financial data..."
+        ):
 
             try:
 
@@ -955,15 +959,39 @@ if st.button("Ask Gemini"):
                     financial_context
                 )
 
-                st.success("Gemini's Analysis")
-
-                st.write(answer)
+                st.session_state.chat_history.append(
+                    {
+                        "question": question,
+                        "answer": answer
+                    }
+                )
 
             except Exception as e:
 
                 st.error(
                     f"Unable to get a response from Gemini: {e}"
                 )
+
+
+# --------------------------------------------------
+# CHAT HISTORY
+# --------------------------------------------------
+
+if st.session_state.chat_history:
+
+    st.subheader("💬 Conversation")
+
+    for chat in st.session_state.chat_history:
+
+        st.markdown(
+            f"**You:** {chat['question']}"
+        )
+
+        st.markdown(
+            f"**Gemini:** {chat['answer']}"
+        )
+
+        st.divider()
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
