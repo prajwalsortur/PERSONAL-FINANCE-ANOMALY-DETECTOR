@@ -217,6 +217,34 @@ if len(filtered_df) > 0:
         filtered_df["severity"] == "High"
     ).sum()
 
+    top_suspicious = (
+        filtered_df[
+            filtered_df["is_anomaly"] == 1
+        ]
+        .sort_values(
+            "risk_score",
+            ascending=False
+        )
+        .head(5)
+    )
+
+    suspicious_transactions = ""
+
+    for _, row in top_suspicious.iterrows():
+
+        suspicious_transactions += f"""
+Transaction ID: {int(row['transaction_id'])}
+Date: {row['date'].date()}
+Category: {row['category']}
+Merchant: {row['merchant']}
+Amount: ₹{row['amount']:,.2f}
+Payment Method: {row['payment_method']}
+Risk Score: {row['risk_score']:.0f}/100
+Severity: {row['severity']}
+Reason: {row['reason']}
+Amount Difference: {row['amount_difference_percent']:.2f}%
+
+"""
     average_transaction = (
         filtered_df["amount"].mean()
     )
@@ -243,7 +271,12 @@ Selected categories:
 
 Selected payment methods:
 {", ".join(selected_payment_methods)}
+
+TOP 5 SUSPICIOUS TRANSACTIONS:
+
+{suspicious_transactions}
 """
+
 
 else:
 
