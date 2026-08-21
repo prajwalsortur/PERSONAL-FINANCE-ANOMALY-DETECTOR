@@ -15,6 +15,20 @@ st.set_page_config(
     page_icon="💰",
     layout="wide"
 )
+st.markdown(
+    """
+    <style>
+    .chart-box {
+        border: 1px solid rgba(128, 128, 128, 0.35);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        background-color: rgba(128, 128, 128, 0.05);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # --------------------------------------------------
@@ -35,10 +49,16 @@ analysis_df["date"] = pd.to_datetime(analysis_df["date"])
 # TITLE
 # --------------------------------------------------
 
-st.title("💰 Personal Finance Anomaly Detector")
-
 st.markdown(
-    "AI-powered financial transaction analysis and anomaly detection"
+    """
+    <div style="text-align: center;">
+        <h1>💰 Personal Finance Anomaly Detector</h1>
+        <p style="font-size: 20px;">
+            AI-powered financial transaction analysis and anomaly detection
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -46,46 +66,84 @@ st.markdown(
 # SIDEBAR FILTERS
 # --------------------------------------------------
 
-st.sidebar.header("🔎 Filters")
+# --------------------------------------------------
+# FILTERS
+# --------------------------------------------------
 
+st.subheader("🔎 Filters")
+
+filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
 
 min_date = df["date"].min().date()
 max_date = df["date"].max().date()
 
-date_range = st.sidebar.date_input(
-    "Date Range",
-    value=(min_date, max_date),
-    min_value=min_date,
-    max_value=max_date
-)
-
-
 categories = sorted(df["category"].unique())
-
-selected_categories = st.sidebar.multiselect(
-    "Category",
-    categories,
-    default=categories
-)
-
 
 payment_methods = sorted(df["payment_method"].unique())
 
-selected_payment_methods = st.sidebar.multiselect(
-    "Payment Method",
-    payment_methods,
-    default=payment_methods
-)
+
+with filter_col1:
+
+    st.markdown(
+        "<div style='text-align:center; font-weight:bold;'>Date Range</div>",
+        unsafe_allow_html=True
+    )
+
+    date_range = st.date_input(
+        "Date Range",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date,
+        label_visibility="collapsed"
+    )
 
 
-transaction_type = st.sidebar.radio(
-    "Transaction Type",
-    [
-        "All Transactions",
-        "Normal Transactions",
-        "Anomalies Only"
-    ]
-)
+with filter_col2:
+
+    st.markdown(
+        "<div style='text-align:center; font-weight:bold;'>Category</div>",
+        unsafe_allow_html=True
+    )
+
+    selected_categories = st.multiselect(
+        "Category",
+        categories,
+        default=categories,
+        label_visibility="collapsed"
+    )
+
+
+with filter_col3:
+
+    st.markdown(
+        "<div style='text-align:center; font-weight:bold;'>Payment Method</div>",
+        unsafe_allow_html=True
+    )
+
+    selected_payment_methods = st.multiselect(
+        "Payment Method",
+        payment_methods,
+        default=payment_methods,
+        label_visibility="collapsed"
+    )
+
+
+with filter_col4:
+
+    st.markdown(
+        "<div style='text-align:center; font-weight:bold;'>Transaction Type</div>",
+        unsafe_allow_html=True
+    )
+
+    transaction_type = st.selectbox(
+        "Transaction Type",
+        [
+            "All Transactions",
+            "Normal Transactions",
+            "Anomalies Only"
+        ],
+        label_visibility="collapsed"
+    )
 
 
 # --------------------------------------------------
@@ -334,7 +392,12 @@ st.divider()
 # FINANCIAL INSIGHTS
 # --------------------------------------------------
 
-st.subheader("💡 Financial Insights")
+st.markdown(
+    """
+    <h2 style="text-align: center;">Financial Insights</h2>
+    """,
+    unsafe_allow_html=True
+)
 
 
 insight_analysis_df = filtered_df[
@@ -358,7 +421,12 @@ st.divider()
 # SPENDING OVER TIME
 # --------------------------------------------------
 
-st.subheader("📈 Spending Over Time")
+st.markdown(
+    """
+    <h2 style="text-align: center;">Spending Over Time</h2>
+    """,
+    unsafe_allow_html=True
+)
 
 
 daily_spending = (
@@ -370,12 +438,10 @@ daily_spending = (
     .reset_index()
 )
 
-
 daily_spending.columns = [
     "date",
     "amount"
 ]
-
 
 fig_time = px.line(
     daily_spending,
@@ -388,11 +454,20 @@ fig_time = px.line(
     }
 )
 
-
-st.plotly_chart(
-    fig_time,
-    use_container_width=True
+fig_time.update_layout(
+    title_x=0.5,
+    margin=dict(t=50, l=20, r=20, b=20)
 )
+
+st.markdown('<div class="chart-box">', unsafe_allow_html=True)
+
+with st.container(border=True):
+    st.plotly_chart(
+        fig_time,
+        use_container_width=True
+    )
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --------------------------------------------------
@@ -955,8 +1030,13 @@ f"{row['severity']}"
 # AI FINANCIAL ASSISTANT
 # --------------------------------------------------
 
+# --------------------------------------------------
+# AI FINANCIAL ASSISTANT
+# --------------------------------------------------
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+
 st.divider()
 
 st.subheader("🤖 AI Financial Assistant")
@@ -966,20 +1046,28 @@ st.write(
     "categories, merchants, and risk patterns."
 )
 
-question = st.text_input(
-    "Ask your financial question:",
-    placeholder="Example: Which category has the highest spending?"
+# Display previous conversation
+for chat in st.session_state.chat_history:
+
+    with st.chat_message("user"):
+        st.markdown(chat["question"])
+
+    with st.chat_message("assistant"):
+        st.markdown(chat["answer"])
+
+
+# ChatGPT-style input
+question = st.chat_input(
+    "Ask your financial question..."
 )
 
-if st.button("Ask Gemini"):
-    
-    if not question.strip():
+if question:
 
-        st.warning(
-            "Please enter a question before asking Gemini."
-        )
+    # Display user's new message immediately
+    with st.chat_message("user"):
+        st.markdown(question)
 
-    else:
+    with st.chat_message("assistant"):
 
         with st.spinner(
             "Gemini is analyzing your financial data..."
@@ -1013,6 +1101,8 @@ CONVERSATION HISTORY:
                     combined_context
                 )
 
+                st.markdown(answer)
+
                 st.session_state.chat_history.append(
                     {
                         "question": question,
@@ -1025,7 +1115,6 @@ CONVERSATION HISTORY:
                 st.error(
                     f"Unable to get a response from Gemini: {e}"
                 )
-
 # --------------------------------------------------
 # CHAT HISTORY
 # --------------------------------------------------
