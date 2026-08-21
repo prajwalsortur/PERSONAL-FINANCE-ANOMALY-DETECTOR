@@ -1030,19 +1030,21 @@ CONVERSATION HISTORY:
 # CHAT HISTORY
 # --------------------------------------------------
 
+# --------------------------------------------------
+# CHAT HISTORY
+# --------------------------------------------------
+
 if st.session_state.chat_history:
 
     st.subheader("💬 Conversation")
 
     for chat in st.session_state.chat_history:
 
-        st.markdown(
-            f"**You:** {chat['question']}"
-        )
+        with st.chat_message("user"):
+            st.markdown(chat["question"])
 
-        st.markdown(
-            f"**Gemini:** {chat['answer']}"
-        )
+        with st.chat_message("assistant"):
+            st.markdown(chat["answer"])
 
         st.divider()
 # --------------------------------------------------
