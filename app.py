@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from src.financial_insights import generate_insights
+from src.ai_assistant import ask_financial_assistant
 
 # --------------------------------------------------
 # PAGE CONFIGURATION
@@ -186,7 +187,69 @@ else:
 
     anomaly_percentage = 0
 
+# --------------------------------------------------
+# AI FINANCIAL CONTEXT
+# --------------------------------------------------
 
+if len(filtered_df) > 0:
+
+    category_spending = (
+        filtered_df
+        .groupby("category")["amount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    top_category = category_spending.index[0]
+    top_category_amount = category_spending.iloc[0]
+
+    merchant_spending = (
+        filtered_df
+        .groupby("merchant")["amount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    top_merchant = merchant_spending.index[0]
+    top_merchant_amount = merchant_spending.iloc[0]
+
+    high_risk_count = (
+        filtered_df["severity"] == "High"
+    ).sum()
+
+    average_transaction = (
+        filtered_df["amount"].mean()
+    )
+
+    financial_context = f"""
+Total transactions: {total_transactions}
+Total spending: ₹{total_spending:,.2f}
+Anomalies detected: {anomalies}
+Anomaly percentage: {anomaly_percentage:.2f}%
+High-risk anomalies: {high_risk_count}
+Average transaction amount: ₹{average_transaction:,.2f}
+
+Highest spending category:
+{top_category} — ₹{top_category_amount:,.2f}
+
+Highest spending merchant:
+{top_merchant} — ₹{top_merchant_amount:,.2f}
+
+Transaction type filter:
+{transaction_type}
+
+Selected categories:
+{", ".join(selected_categories)}
+
+Selected payment methods:
+{", ".join(selected_payment_methods)}
+"""
+
+else:
+
+    financial_context = """
+No transactions were found for the selected filters.
+"""
 # --------------------------------------------------
 # KPI CARDS
 # --------------------------------------------------
@@ -855,7 +918,52 @@ f"{row['severity']}"
                 f"**Amount Difference:** "
             f"{row['amount_difference_percent']:.2f}%"
     )
+# --------------------------------------------------
+# AI FINANCIAL ASSISTANT
+# --------------------------------------------------
 
+st.divider()
+
+st.subheader("🤖 AI Financial Assistant")
+
+st.write(
+    "Ask questions about your spending, anomalies, "
+    "categories, merchants, and risk patterns."
+)
+
+question = st.text_input(
+    "Ask your financial question:",
+    placeholder="Example: Which category has the highest spending?"
+)
+
+if st.button("Ask Gemini"):
+
+    if not question.strip():
+
+        st.warning(
+            "Please enter a question before asking Gemini."
+        )
+
+    else:
+
+        with st.spinner("Gemini is analyzing your financial data..."):
+
+            try:
+
+                answer = ask_financial_assistant(
+                    question,
+                    financial_context
+                )
+
+                st.success("Gemini's Analysis")
+
+                st.write(answer)
+
+            except Exception as e:
+
+                st.error(
+                    f"Unable to get a response from Gemini: {e}"
+                )
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
