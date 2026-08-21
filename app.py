@@ -18,6 +18,24 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    div.stButton > button[kind="secondary"] {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 9999;
+        border-radius: 50px;
+        padding: 12px 22px;
+        font-size: 16px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    <style>
     .chart-box {
         border: 1px solid rgba(128, 128, 128, 0.35);
         border-radius: 12px;
@@ -1030,21 +1048,51 @@ f"{row['severity']}"
 # AI FINANCIAL ASSISTANT
 # --------------------------------------------------
 
-# --------------------------------------------------
-# AI FINANCIAL ASSISTANT
-# --------------------------------------------------
+# Floating AI button
+if "show_ai" not in st.session_state:
+    st.session_state.show_ai = False
+
+if st.button("✨ AI Assistant", key="ai_toggle"):
+    st.session_state.show_ai = not st.session_state.show_ai 
+
+if st.session_state.show_ai:
+    
+    st.markdown(
+        """
+        <style>
+        .ai-popup {
+            position: fixed;
+            bottom: 95px;
+            right: 30px;
+            width: 500px;
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.20);
+            border: 1px solid #dddddd;
+            z-index: 9998;
+        }
+
+        .ai-popup-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        </style>
+
+        <div class="ai-popup">
+            <div class="ai-popup-title">
+                ✨ AI Financial Assistant
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+)
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-st.divider()
 
-st.subheader("🤖 AI Financial Assistant")
-
-st.write(
-    "Ask questions about your spending, anomalies, "
-    "categories, merchants, and risk patterns."
-)
 
 # Display previous conversation
 for chat in st.session_state.chat_history:
@@ -1057,9 +1105,16 @@ for chat in st.session_state.chat_history:
 
 
 # ChatGPT-style input
-question = st.chat_input(
-    "Ask your financial question..."
-)
+question = None
+
+if st.session_state.show_ai:
+
+    question = st.text_input(
+        "Search",
+        placeholder="Ask questions about your spending, anomalies, categories, merchants, and risk patterns",
+        label_visibility="collapsed",
+        key="ai_search"
+    )
 
 if question:
 
@@ -1115,10 +1170,6 @@ CONVERSATION HISTORY:
                 st.error(
                     f"Unable to get a response from Gemini: {e}"
                 )
-# --------------------------------------------------
-# CHAT HISTORY
-# --------------------------------------------------
-
 # --------------------------------------------------
 # CHAT HISTORY
 # --------------------------------------------------
