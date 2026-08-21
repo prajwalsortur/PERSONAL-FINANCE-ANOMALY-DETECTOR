@@ -987,9 +987,30 @@ if st.button("Ask Gemini"):
 
             try:
 
+                conversation_context = ""
+
+                for chat in st.session_state.chat_history:
+
+                    conversation_context += f"""
+Previous User Question:
+{chat['question']}
+
+Previous Gemini Answer:
+{chat['answer']}
+
+"""
+
+                combined_context = f"""
+{financial_context}
+
+CONVERSATION HISTORY:
+
+{conversation_context}
+"""
+
                 answer = ask_financial_assistant(
                     question,
-                    financial_context
+                    combined_context
                 )
 
                 st.session_state.chat_history.append(
@@ -1004,7 +1025,6 @@ if st.button("Ask Gemini"):
                 st.error(
                     f"Unable to get a response from Gemini: {e}"
                 )
-
 
 # --------------------------------------------------
 # CHAT HISTORY
