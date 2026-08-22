@@ -15,6 +15,136 @@ st.set_page_config(
     page_icon="💰",
     layout="wide"
 )
+
+# --------------------------------------------------
+# ANIMATED PARTICLE BACKGROUND
+# --------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(circle at 20% 20%, rgba(0, 123, 255, 0.12), transparent 35%),
+            radial-gradient(circle at 80% 80%, rgba(120, 50, 255, 0.12), transparent 35%),
+            linear-gradient(135deg, #0b1020, #111827, #0b1020);
+        background-size: 200% 200%;
+        animation: backgroundMove 15s ease infinite;
+    }
+
+    @keyframes backgroundMove {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# --------------------------------------------------
+# FLOATING PARTICLES
+# --------------------------------------------------
+
+st.markdown(
+    """
+    <div class="particles">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <style>
+    .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .particles span {
+        position: absolute;
+        display: block;
+        width: 4px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.35);
+        border-radius: 50%;
+        animation: floatParticle 18s linear infinite;
+    }
+
+    .particles span:nth-child(1)  { left: 5%;  animation-delay: 0s; }
+    .particles span:nth-child(2)  { left: 12%; animation-delay: 2s; }
+    .particles span:nth-child(3)  { left: 20%; animation-delay: 5s; }
+    .particles span:nth-child(4)  { left: 28%; animation-delay: 1s; }
+    .particles span:nth-child(5)  { left: 35%; animation-delay: 7s; }
+    .particles span:nth-child(6)  { left: 43%; animation-delay: 3s; }
+    .particles span:nth-child(7)  { left: 50%; animation-delay: 9s; }
+    .particles span:nth-child(8)  { left: 58%; animation-delay: 4s; }
+    .particles span:nth-child(9)  { left: 65%; animation-delay: 6s; }
+    .particles span:nth-child(10) { left: 72%; animation-delay: 8s; }
+    .particles span:nth-child(11) { left: 78%; animation-delay: 2s; }
+    .particles span:nth-child(12) { left: 84%; animation-delay: 10s; }
+    .particles span:nth-child(13) { left: 89%; animation-delay: 5s; }
+    .particles span:nth-child(14) { left: 94%; animation-delay: 1s; }
+    .particles span:nth-child(15) { left: 97%; animation-delay: 7s; }
+
+    @keyframes floatParticle {
+        0% {
+            top: 110%;
+            opacity: 0;
+            transform: translateX(0);
+        }
+
+        15% {
+            opacity: 1;
+        }
+
+        50% {
+            transform: translateX(40px);
+        }
+
+        85% {
+            opacity: 1;
+        }
+
+        100% {
+            top: -10%;
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+    }
+    /* Keep dashboard content above background particles */
+
+    [data-testid="stAppViewContainer"] {
+    position: relative;
+    z-index: 1;
+    }
+
+    [data-testid="stHeader"] {
+    background: transparent;
+    }
+
+    [data-testid="stSidebar"] {
+    position: relative;
+    z-index: 2;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 st.markdown(
     """
     <style>
@@ -47,7 +177,29 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+st.markdown(
+    """
+    <style>
+    /* Glass effect for dashboard containers */
+    div[data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 18px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
 
+    .chart-box {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --------------------------------------------------
 # LOAD DATA
@@ -583,7 +735,10 @@ with col2:
 # SEVERITY ANALYSIS
 # --------------------------------------------------
 
-st.subheader("⚠️ Anomaly Severity")
+st.markdown(
+    "<h3 style='text-align: center;'>⚠️ Anomaly Severity</h3>",
+    unsafe_allow_html=True
+)
 
 
 severity_df = (
@@ -605,7 +760,6 @@ fig_severity = px.bar(
     severity_df,
     x="severity",
     y="count",
-    title="Anomalies by Severity",
     labels={
         "severity": "Severity",
         "count": "Number of Anomalies"
@@ -623,7 +777,10 @@ st.plotly_chart(
 # PAYMENT METHOD ANALYSIS
 # --------------------------------------------------
 
-st.subheader("💳 Payment Method Analysis")
+st.markdown(
+    "<h3 style='text-align: center;'>💳 Payment Method Analysis</h3>",
+    unsafe_allow_html=True
+)
 
 
 payment_analysis = (
@@ -642,7 +799,6 @@ fig_payment = px.bar(
     payment_analysis,
     x="payment_method",
     y="anomalies",
-    title="Anomalies by Payment Method",
     labels={
         "payment_method": "Payment Method",
         "anomalies": "Anomalies"
@@ -660,7 +816,10 @@ st.plotly_chart(
 # NORMAL VS ANOMALOUS
 # --------------------------------------------------
 
-st.subheader("🚨 Transaction Classification")
+st.markdown(
+    "<h3 style='text-align: center;'>🚨 Transaction Classification</h3>",
+    unsafe_allow_html=True
+)
 
 
 classification = (
@@ -687,6 +846,13 @@ fig_classification = px.pie(
     title="Normal vs Anomalous Transactions"
 )
 
+fig_classification.update_layout(
+    title={
+        "text": "Normal vs Anomalous Transactions",
+        "x": 0.5,
+        "xanchor": "center"
+    }
+)
 
 st.plotly_chart(
     fig_classification,
@@ -696,7 +862,10 @@ st.plotly_chart(
 # ML MODEL EVALUATION
 # --------------------------------------------------
 
-st.subheader("🤖 ML Model Evaluation")
+st.markdown(
+    "<h2 style='text-align: center;'>🤖 ML Model Evaluation</h2>",
+    unsafe_allow_html=True
+)
 
 
 # --------------------------------------------------
@@ -842,7 +1011,10 @@ if not score_df.empty:
 # FEATURE BEHAVIOR ANALYSIS
 # --------------------------------------------------
 
-st.subheader("📊 Anomalous Transaction Behavior")
+st.markdown(
+    "<h3 style='text-align: center;'>📊 Anomalous Transaction Behavior</h3>",
+    unsafe_allow_html=True
+)
 
 
 # --------------------------------------------------
