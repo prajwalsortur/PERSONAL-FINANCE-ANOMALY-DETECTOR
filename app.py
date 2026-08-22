@@ -492,12 +492,23 @@ st.markdown('</div>', unsafe_allow_html=True)
 # CATEGORY ANALYSIS
 # --------------------------------------------------
 
+# --------------------------------------------------
+# CATEGORY ANALYSIS
+# --------------------------------------------------
+
 col1, col2 = st.columns(2)
 
 
 with col1:
 
-    st.subheader("📊 Spending by Category")
+    st.markdown(
+        """
+        <h3 style="text-align: center;">
+            📊 Spending by Category
+        </h3>
+        """,
+        unsafe_allow_html=True
+    )
 
     category_spending = (
         filtered_df
@@ -514,7 +525,6 @@ with col1:
         category_spending,
         x="category",
         y="amount",
-        title="Total Spending by Category",
         labels={
             "category": "Category",
             "amount": "Amount (₹)"
@@ -529,7 +539,14 @@ with col1:
 
 with col2:
 
-    st.subheader("🚨 Anomalies by Category")
+    st.markdown(
+        """
+        <h3 style="text-align: center;">
+            🚨 Anomalies by Category
+        </h3>
+        """,
+        unsafe_allow_html=True
+    )
 
     category_anomalies = (
         filtered_df[
@@ -550,7 +567,6 @@ with col2:
         category_anomalies,
         x="category",
         y="anomalies",
-        title="Detected Anomalies by Category",
         labels={
             "category": "Category",
             "anomalies": "Number of Anomalies"
@@ -1049,45 +1065,7 @@ f"{row['severity']}"
 # --------------------------------------------------
 
 # Floating AI button
-if "show_ai" not in st.session_state:
-    st.session_state.show_ai = False
 
-if st.button("✨ AI Assistant", key="ai_toggle"):
-    st.session_state.show_ai = not st.session_state.show_ai 
-
-if st.session_state.show_ai:
-    
-    st.markdown(
-        """
-        <style>
-        .ai-popup {
-            position: fixed;
-            bottom: 95px;
-            right: 30px;
-            width: 500px;
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.20);
-            border: 1px solid #dddddd;
-            z-index: 9998;
-        }
-
-        .ai-popup-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        </style>
-
-        <div class="ai-popup">
-            <div class="ai-popup-title">
-                ✨ AI Financial Assistant
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-)
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -1107,14 +1085,12 @@ for chat in st.session_state.chat_history:
 # ChatGPT-style input
 question = None
 
-if st.session_state.show_ai:
 
-    question = st.text_input(
-        "Search",
-        placeholder="Ask questions about your spending, anomalies, categories, merchants, and risk patterns",
-        label_visibility="collapsed",
-        key="ai_search"
-    )
+question = None
+
+question = st.chat_input(
+    "Ask questions about your spending, anomalies, categories, merchants, and risk patterns"
+)
 
 if question:
 
@@ -1170,30 +1146,29 @@ CONVERSATION HISTORY:
                 st.error(
                     f"Unable to get a response from Gemini: {e}"
                 )
-# --------------------------------------------------
-# CHAT HISTORY
-# --------------------------------------------------
 
-if st.session_state.chat_history:
 
-    st.subheader("💬 Conversation")
 
-    for chat in st.session_state.chat_history:
-
-        with st.chat_message("user"):
-            st.markdown(chat["question"])
-
-        with st.chat_message("assistant"):
-            st.markdown(chat["answer"])
-
-        st.divider()
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
 
 st.divider()
 
-st.caption(
-    "Personal Finance Anomaly Detector | "
-    "Machine Learning powered by Isolation Forest"
+st.markdown(
+    """
+    <div style="
+        text-align: center;
+        font-size: 14px;
+        color: #888;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    ">
+        Personal Finance Anomaly Detector | Machine Learning powered by Isolation Forest
+    </div>
+    """,
+    unsafe_allow_html=True
 )
+
+
+
